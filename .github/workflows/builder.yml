@@ -1,0 +1,34 @@
+name: builder
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '49 23 * * *'
+
+jobs:
+  scheduled:
+    runs-on: ubuntu-latest
+    steps:
+    - name: apt
+      run: |-
+        sudo apt update
+        sudo apt install -y build-essential ccache ecj fastjar file g++ gawk gettext git java-propose-classpath libelf-dev libncurses5-dev libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget python3-distutils python3-setuptools rsync subversion swig time xsltproc zlib1g-dev
+    - name: download
+      run: wget https://downloads.openwrt.org/releases/21.02.1/targets/ramips/mt76x8/openwrt-imagebuilder-21.02.1-ramips-mt76x8.Linux-x86_64.tar.xz
+    - name: extract
+      run: tar xvJf openwrt-imagebuilder-21.02.1-ramips-mt76x8.Linux-x86_64.tar.xz
+    - name: build
+      run: |-
+        cd openwrt-imagebuilder-21.02.1-ramips-mt76x8.Linux-x86_64
+        make image PROFILE="tplink_tl-mr6400-v4" PACKAGES="modemmanager nodogsplash -ppp -ppp-mod-pppoe -ip6tables -odhcp6c -kmod-ipv6 -kmod-ip6tables -odhcpd-ipv6only"
+    - name: generate-tag-name
+      run: echo "TAG_NAME=refs/tags/v$(date '+%Y%m%d')" >> $GITHUB_ENV
+    - name: release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        body: "OpenWrt for TP-Link TL-MR6400 V3 with ModemManager and NoDogSpash (captive portal) included."
+        file: openwrt-imagebuilder-21.02.1-ramips-mt76x8.Linux-x86_64/bin/targets/ramips/mt76x8/*.bin
+        file_glob: true
+        tag: ${{ env.TAG_NAME }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
