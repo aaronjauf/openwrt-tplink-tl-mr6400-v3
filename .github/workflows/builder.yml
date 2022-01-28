@@ -21,7 +21,7 @@ jobs:
     - name: build
       run: |-
         cd openwrt-imagebuilder-ramips-mt76x8.Linux-x86_64
-        make image PROFILE="tplink_tl-mr6400-v4" PACKAGES="modemmanager nodogsplash"
+        make image PROFILE="tplink_tl-mr6400-v4" PACKAGES="modemmanager"
     - name: generate-tag-name
       run: echo "TAG_NAME=refs/tags/v$(date '+%Y%m%d')" >> $GITHUB_ENV
     - name: release
